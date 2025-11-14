@@ -8,6 +8,7 @@
 (define-constant err-transfer-failed (err u106))
 (define-constant err-invalid-collaborators (err u107))
 (define-constant err-no-balance (err u108))
+(define-constant err-invalid-transfer (err u109))
 
 (define-data-var video-nonce uint u0)
 
@@ -232,5 +233,22 @@
       created-at: (get created-at video)
     })
     err-not-found
+  )
+)
+
+(define-public (transfer-video-ownership (video-id uint) (new-owner principal))
+  (let
+    (
+      (video (unwrap! (get-video video-id) err-not-found))
+    )
+    (asserts! (is-eq tx-sender (get creator video)) err-unauthorized)
+    (asserts! (not (is-eq tx-sender new-owner)) err-invalid-transfer)
+    
+    (map-set videos
+      { video-id: video-id }
+      (merge video { creator: new-owner })
+    )
+    
+    (ok true)
   )
 )
